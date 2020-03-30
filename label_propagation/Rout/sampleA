@@ -1,0 +1,102 @@
+
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> unlink(".RData")
+> .libPaths("/zfs3/users/grahamemma9/grahamemma9/R/x86_64-pc-linux-gnu-library/3.5")
+> library(tidyverse)
+Registered S3 method overwritten by 'dplyr':
+  method               from  
+  as.data.frame.tbl_df tibble
+Registered S3 method overwritten by 'rvest':
+  method            from
+  read_xml.response xml2
+── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──
+✔ ggplot2 2.2.1     ✔ purrr   0.2.5
+✔ tibble  1.4.2     ✔ dplyr   0.7.6
+✔ tidyr   0.8.1     ✔ stringr 1.3.1
+✔ readr   1.1.1     ✔ forcats 0.3.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+> library(stringr)
+> args=(commandArgs(TRUE))
+> names <-as.character(args[[1]])
+> #permutations <- as.numeric(args[[2]])
+> network_name <- "STRING"
+> perc_in_hmdb <- read.csv("../integration/graph_files/string_db_percent_of_fn_in_hmdb_weight.csv", stringsAsFactors = FALSE)
+> 
+> #load STRING network, label propagation scores (scores), candidate gene list (variant_info), gene to node id mapping, pre-propagation label values (original_scores)
+> #STRING <- read.table("../integration/graph_files/STRING_graph_file_v11_gene_list_functional_entire_db.txt", 
+> #                     sep = "\t",
+> #                     stringsAsFactors = FALSE,
+> #                     header = TRUE)
+> scores <- read.csv(paste0(c("../integration/LPA_output/", names), collapse = ""))
+> colnames(scores) <- c("Node.ID", "Score.ID")
+> 
+> variant_info <- read.csv(paste0(c("../integration/wes_files/", names, "_candidate_genes.csv"), collapse = ""),
++   												 header = TRUE,
++   												 na.strings = c("None", "-1", "NA"),
++   												 stringsAsFactors = FALSE)
+> 
+> final_variant_score_df <- data.frame(gene = variant_info$X.GENE_SYMBOL, 
++                                      Exomiser_phenotype_score = variant_info$EXOMISER_GENE_PHENO_SCORE) %>% 
++   group_by(gene) %>% 
++   filter(Exomiser_phenotype_score == max(Exomiser_phenotype_score)) %>% 
++   unique()
+> 
+> gene_list_node_ids <- read.table("../integration/graph_files/STRING_graph_file_v11_gene_to_nodeid_mapping_functional_entire_db.txt", 
++                                     sep = "\t", 
++                                     stringsAsFactors = FALSE, 
++                                     header = TRUE)
+> original_scores <- read.table(paste0(c("../integration/label_files/", network_name, "_", names), collapse = ""))[, c(1, 2)]
+> names(original_scores) <- c("Node.ID", "Original.Score.ID")
+> 
+> #join label propagation output with node id to gene name mapping
+> output <- scores %>% 
++      left_join(gene_list_node_ids, by = c("Node.ID" = "node_id")) %>% 
++   filter(genes %in% variant_info$X.GENE_SYMBOL)
+> 
+> #further join output file with original scores
+> whole_df <- output %>%
++      select(Node.ID, genes, Score.ID) %>%
++      left_join(original_scores, by = "Node.ID") %>%
++     filter(genes %in% variant_info$X.GENE_SYMBOL) %>% 
++      arrange(desc(Score.ID)) %>% mutate(metPropagate_rank = 1:nrow(output)) %>%
++     left_join(final_variant_score_df, by = c("genes" = "gene")) %>% 
++     left_join(perc_in_hmdb, by = "genes") %>% 
++     mutate( scaled1_metProp = (1-weight)*(Score.ID - min(Score.ID, na.rm = TRUE))/(max(Score.ID, na.rm = TRUE)-min(Score.ID, na.rm = TRUE)),
++     scaled_metProp = (1-weight)*(Score.ID - min(Score.ID, na.rm = TRUE))/(max(Score.ID, na.rm = TRUE)-min(Score.ID, na.rm = TRUE)),
++     scaled2_metProp = (scaled1_metProp - min(scaled1_metProp, na.rm = TRUE))/(max(scaled1_metProp, na.rm = TRUE)-min(scaled1_metProp, na.rm = TRUE)),
++     scaled1_exom_phen = weight*(Exomiser_phenotype_score - min(Exomiser_phenotype_score, na.rm = TRUE))/(max(Exomiser_phenotype_score)-min(Exomiser_phenotype_score, na.rm = TRUE)),
++     scaled2_exom_phen = (scaled1_exom_phen - min(scaled1_exom_phen, na.rm = TRUE))/(max(scaled1_exom_phen, na.rm = TRUE)-min(scaled1_exom_phen, na.rm = TRUE)),
++     scaled_exom_phen = weight*(Exomiser_phenotype_score - min(Exomiser_phenotype_score, na.rm = TRUE))/(max(Exomiser_phenotype_score, na.rm = TRUE)-min(Exomiser_phenotype_score, na.rm = TRUE)),
++     scaled_by_met_active_comb_score = scaled2_metProp+scaled2_exom_phen) %>% 
++     arrange(desc(scaled_by_met_active_comb_score)) %>% 
++     mutate(Exom_and_metPropagate_rank = 1:nrow(output)) %>% 
++      select(Node.ID, genes, Score.ID, Original.Score.ID, metPropagate_rank, Exom_and_metPropagate_rank)
+Warning message:
+Column `genes`/`gene` joining character vector and factor, coercing into character vector 
+>  
+> write.csv(whole_df, paste0(c("../integration/results/", names, "_", network_name, "_ranked_label_propagation_scores.csv"), collapse = ""), row.names = FALSE)
+> 
+> proc.time()
+   user  system elapsed 
+  3.988   0.887   6.682 

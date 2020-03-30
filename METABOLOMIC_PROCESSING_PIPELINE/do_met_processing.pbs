@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Check on some basics:
+echo "Running on host: " `hostname`
+
+echo "Starting R at `date`"
+
+echo "Current working directory is now: " `pwd`
+#cd ./March_2018_metabolomic_data/metPropagate/METABOLOMIC_PROCESSING_PIPELINE
+
+echo "Current working directory is now: " `pwd`
+
+## seeting input arguments for R script 
+
+patient=${patient}
+
+Rout="Rout/$patient"
+# Run R with this command file:
+#change file name depending on if running on mzML or mzData files. 
+/nfs/37zfs1-packages/modules/install/R/3.6.1/bin/R CMD BATCH "--args $patient" preprocessing.R "$Rout"
+
+echo "$patient"
+echo "R run COMPLETED at `date`"

@@ -1,0 +1,5 @@
+/opt/packages/install/R/3.5.0/lib64/R/bin/BATCH: line 60: /zfs3/users/grahamemma9/grahamemma9/label_propagation/Rout/sampleA: No such file or directory
+usage: main_graph_with_weights.py lgc [-h] -g GRAPHFILE -l LABELFILE
+                                      [-o [OUTFILE]] [--alpha [ALPHA]]
+main_graph_with_weights.py lgc: error: argument -l/--labelfile: can't open '../integration/label_files/intermediate_label_file_sampleA': [Errno 2] No such file or directory: '../integration/label_files/intermediate_label_file_sampleA'
+/opt/packages/install/R/3.5.0/lib64/R/bin/BATCH: line 60: /zfs3/users/grahamemma9/grahamemma9/label_propagation/Rout/sampleA: No such file or directory
