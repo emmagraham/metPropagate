@@ -391,7 +391,7 @@ sample_name <-as.character(args[[1]])
   	}
   
   #read in list of TIDEX variants from TRIO analysis
-  variants <- read.csv(paste0(c("../../candidate_genes/", sample_name, "_variants.csv"), collapse = ""))
+  #variants <- read.csv(paste0(c("../../candidate_genes/", sample_name, "_variants.csv"), collapse = ""))
   
   #get gene-metabolite annotations
 
