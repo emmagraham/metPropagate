@@ -1,5 +1,6 @@
 # Implementations of label propagation like algorithms
 
+*Please note, this README was created by yamaguchiyuto.* The original repo can be found here: https://github.com/yamaguchiyuto/label_propagation. 
 This is a set of scikit-learn compatible implementations of label propagation (LP) like algorithms.
 One can easily grid search and cross validate models using utils in scikit-learn.
 
@@ -148,9 +149,9 @@ matrix([[ 0.,  1.,  0.,  0.],
         [ 0.,  1.,  0.,  1.],
         [ 0.,  0.,  1.,  0.]])
 
-In [10]: x_train = np.array([1,2])
+In [10]: x_train = np.array([1,2, 3, 4])
 
-In [11]: y_train = np.array([0,1]) # node 1 -> label 0, node 2 -> label 1
+In [11]: y_train = np.array([0,1, 0, 1]) # node 1 -> label 0, node 2 -> label 1, node 3 -> label 0, node 4 -> label 1
 
 In [12]: clf = LGC(graph=A, alpha=0.99)
 

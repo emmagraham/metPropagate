@@ -11,7 +11,7 @@ label_file="../integration/label_files/STRING_$patient"
 intermediate_label_file_name="../integration/label_files/intermediate_label_file_$patient"
 cut -d ' ' -f "1,2" $label_file > $intermediate_label_file_name
 output_file="../integration/LPA_output/$patient"
-python main_graph_with_weights.py lgc -g ../../../label_propagation_metabolomics/graph_files/STRING_graph_file_v11_functional_entire_db.txt -l $intermediate_label_file_name -o $output_file
+python main_graph_with_weights.py lgc -g ../integration/graph_files/STRING_graph_file_v11_functional_entire_db.txt -l $intermediate_label_file_name -o $output_file
 
 /nfs/37zfs1-packages/modules/install/R/3.6.1/bin/R CMD BATCH "--args $patient" ../integration/assign_z_scores_and_interpret.R "$Rout"
 
